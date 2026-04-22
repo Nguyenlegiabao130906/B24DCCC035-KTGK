@@ -1,16 +1,14 @@
-import { Button, Card, Col, Input, Popconfirm, Row, Select, Space, Statistic, Table, Tag, Typography } from 'antd';
-import type { ColumnsType } from 'antd/lib/table';
 import { useMemo, useState } from 'react';
 import { useModel } from 'umi';
 import OrderDetailDrawer from './components/OrderDetailDrawer';
 import OrderFormDrawer from './components/OrderFormDrawer';
-import { orderStatusColor, orderStatusLabel, type OrderRecord, OrderStatus } from './types';
+import OrderFilters from './components/OrderFilters';
+import OrderHero from './components/OrderHero';
+import OrderList from './components/OrderList';
+import OrderStatusChart from './components/OrderStatusChart';
+import OrderSummaryCards from './components/OrderSummaryCards';
+import { orderStatusLabel, type OrderRecord, OrderStatus } from './types';
 import './index.less';
-
-const currencyFormatter = new Intl.NumberFormat('vi-VN', {
-	style: 'currency',
-	currency: 'VND',
-});
 
 const statusOptions = [
 	{ value: '', label: 'Tất cả trạng thái' },
@@ -66,182 +64,69 @@ const DonHangPage = () => {
 			});
 	}, [orders, searchText, statusFilter, sortValue]);
 
-	const columns: ColumnsType<OrderRecord> = [
-		{
-			title: 'Mã đơn hàng',
-			dataIndex: 'code',
-			key: 'code',
-			width: 140,
-		},
-		{
-			title: 'Khách hàng',
-			dataIndex: 'customerName',
-			key: 'customerName',
-			width: 180,
-			render: (value, record) => (
-				<div>
-					<div style={{ fontWeight: 600 }}>{value}</div>
-					<Typography.Text type='secondary'>{record.customerPhone}</Typography.Text>
-				</div>
-			),
-		},
-		{
-			title: 'Ngày đặt hàng',
-			dataIndex: 'orderDate',
-			key: 'orderDate',
-			width: 170,
-			render: (value) => new Date(value).toLocaleString('vi-VN'),
-			sorter: (left, right) => new Date(left.orderDate).getTime() - new Date(right.orderDate).getTime(),
-		},
-		{
-			title: 'Tổng tiền',
-			dataIndex: 'total',
-			key: 'total',
-			width: 160,
-			align: 'right',
-			render: (value) => currencyFormatter.format(value),
-			sorter: (left, right) => left.total - right.total,
-		},
-		{
-			title: 'Trạng thái',
-			dataIndex: 'status',
-			key: 'status',
-			width: 150,
-			render: (value: OrderStatus) => <Tag color={orderStatusColor[value]}>{orderStatusLabel[value]}</Tag>,
-		},
-		{
-			title: 'Thao tác',
-			key: 'actions',
-			width: 180,
-			fixed: 'right',
-			render: (_, record) => (
-				<Space size={4} wrap>
-					<Button
-						type='link'
-						onClick={() => {
-							setSelectedOrder(record);
-							setVisibleDetail(true);
-						}}
-					>
-						Xem
-					</Button>
-					<Button
-						type='link'
-						onClick={() => {
-							setEditingOrder(record);
-							setVisibleForm(true);
-						}}
-					>
-						Sửa
-					</Button>
-					{record.status === OrderStatus.PENDING ? (
-						<Popconfirm
-							title='Hủy đơn hàng này?'
-							description='Chỉ đơn hàng ở trạng thái Chờ xác nhận mới được hủy. Thao tác này sẽ cập nhật trạng thái sang Hủy.'
-							okText='Hủy đơn'
-							cancelText='Không'
-							onConfirm={() => cancelOrder(record)}
-						>
-							<Button danger type='link'>
-								Hủy
-							</Button>
-						</Popconfirm>
-					) : (
-						<Button disabled type='link'>
-							Hủy
-						</Button>
-					)}
-				</Space>
-			),
-		},
+	const chartLabels = [
+		orderStatusLabel[OrderStatus.PENDING],
+		orderStatusLabel[OrderStatus.SHIPPING],
+		orderStatusLabel[OrderStatus.COMPLETED],
+		orderStatusLabel[OrderStatus.CANCELLED],
+	];
+
+	const chartSeries = [
+		[
+			orders.filter((item) => item.status === OrderStatus.PENDING).length,
+			orders.filter((item) => item.status === OrderStatus.SHIPPING).length,
+			orders.filter((item) => item.status === OrderStatus.COMPLETED).length,
+			orders.filter((item) => item.status === OrderStatus.CANCELLED).length,
+		],
 	];
 
 	return (
 		<div className='don-hang-page'>
-			<Card className='don-hang-hero' bordered={false}>
-				<Row gutter={[16, 16]} align='middle'>
-					<Col span={24} lg={16}>
-						<Typography.Title level={2} className='don-hang-title'>
-							Quản lý đơn hàng
-						</Typography.Title>
-						<Typography.Paragraph className='don-hang-subtitle'>
-							Danh sách đơn hàng, lọc theo trạng thái, tìm kiếm nhanh, chỉnh sửa và hủy có điều kiện.
-						</Typography.Paragraph>
-					</Col>
-					<Col span={24} lg={8}>
-						<div className='don-hang-actions'>
-							<Button
-								type='primary'
-								onClick={() => {
-									setEditingOrder(undefined);
-									setVisibleForm(true);
-								}}
-							>
-								Thêm đơn hàng
-							</Button>
-							<Button onClick={loadOrders}>Tải lại</Button>
-						</div>
-					</Col>
-				</Row>
-			</Card>
+			<OrderHero
+				onAdd={() => {
+					setEditingOrder(undefined);
+					setVisibleForm(true);
+				}}
+				onReload={loadOrders}
+			/>
 
-			<Row gutter={[16, 16]} className='don-hang-summary'>
-				<Col span={24} sm={12} xl={6}>
-					<Card>
-						<Statistic title='Tổng đơn hàng' value={summary.total} />
-					</Card>
-				</Col>
-				<Col span={24} sm={12} xl={6}>
-					<Card>
-						<Statistic title='Chờ xác nhận' value={summary.pending} valueStyle={{ color: '#d48806' }} />
-					</Card>
-				</Col>
-				<Col span={24} sm={12} xl={6}>
-					<Card>
-						<Statistic title='Đang giao' value={summary.shipping} valueStyle={{ color: '#1677ff' }} />
-					</Card>
-				</Col>
-				<Col span={24} sm={12} xl={6}>
-					<Card>
-						<Statistic title='Doanh thu tạm tính' value={currencyFormatter.format(summary.revenue)} />
-					</Card>
-				</Col>
-			</Row>
+			<OrderSummaryCards
+				total={summary.total}
+				pending={summary.pending}
+				shipping={summary.shipping}
+				revenue={summary.revenue}
+			/>
 
-			<Card className='don-hang-toolbar' bordered={false}>
-				<Row gutter={[12, 12]}>
-					<Col span={24} lg={10}>
-						<Input.Search
-							allowClear
-							placeholder='Tìm theo mã đơn hàng hoặc khách hàng'
-							value={searchText}
-							onChange={(event) => setSearchText(event.target.value)}
-							onSearch={(value) => setSearchText(value)}
-						/>
-					</Col>
-					<Col span={24} sm={12} lg={7}>
-						<Select
-							style={{ width: '100%' }}
-							options={statusOptions}
-							value={statusFilter}
-							onChange={setStatusFilter}
-						/>
-					</Col>
-					<Col span={24} sm={12} lg={7}>
-						<Select style={{ width: '100%' }} options={sortOptions} value={sortValue} onChange={setSortValue} />
-					</Col>
-				</Row>
-			</Card>
+			<OrderStatusChart labels={chartLabels} series={chartSeries} />
 
-			<Card className='don-hang-table-card'>
-				<Table
-					rowKey='id'
-					columns={columns}
-					dataSource={filteredOrders}
-					pagination={{ pageSize: 8, showSizeChanger: false }}
-					scroll={{ x: 980 }}
-				/>
-			</Card>
+			<OrderFilters
+				statusOptions={statusOptions}
+				sortOptions={sortOptions}
+				searchText={searchText}
+				statusFilter={statusFilter}
+				sortValue={sortValue}
+				onSearchTextChange={setSearchText}
+				onStatusChange={setStatusFilter}
+				onSortChange={setSortValue}
+				onAdd={() => {
+					setEditingOrder(undefined);
+					setVisibleForm(true);
+				}}
+				onReload={loadOrders}
+			/>
+
+			<OrderList
+				data={filteredOrders}
+				onView={(record) => {
+					setSelectedOrder(record);
+					setVisibleDetail(true);
+				}}
+				onEdit={(record) => {
+					setEditingOrder(record);
+					setVisibleForm(true);
+				}}
+				onCancel={(record) => cancelOrder(record)}
+			/>
 
 			<OrderFormDrawer
 				visible={visibleForm}

@@ -49,10 +49,12 @@ const OrderDetailDrawer = (props: { visible: boolean; record?: OrderRecord; onCl
 						</Descriptions.Item>
 						<Descriptions.Item label='Khách hàng'>{record.customerName}</Descriptions.Item>
 						<Descriptions.Item label='Số điện thoại'>{record.customerPhone}</Descriptions.Item>
-						<Descriptions.Item label='Ngày đặt hàng'>{moment(record.orderDate).format('HH:mm DD/MM/YYYY')}</Descriptions.Item>
+						<Descriptions.Item label='Ngày đặt hàng'>
+							{moment(record.orderDate).format('HH:mm DD/MM/YYYY')}
+						</Descriptions.Item>
 						<Descriptions.Item label='Tổng tiền'>{currencyFormatter.format(record.total)}</Descriptions.Item>
 						<Descriptions.Item label='Ghi chú' span={2}>
-							{record.note || '--'}
+							{record.note ? <div dangerouslySetInnerHTML={{ __html: record.note }} /> : '--'}
 						</Descriptions.Item>
 					</Descriptions>
 

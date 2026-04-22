@@ -1,8 +1,9 @@
 import { orderCustomers, orderProducts } from '@/pages/DonHang/data';
 import { OrderStatus, type OrderFormValues, type OrderRecord, orderStatusLabel } from '@/pages/DonHang/types';
+import MyDatePicker from '@/components/MyDatePicker';
+import TinyEditor from '@/components/TinyEditor';
 import rules from '@/utils/rules';
-import { Button, Col, DatePicker, Drawer, Form, Input, InputNumber, Row, Select, Space, Typography } from 'antd';
-import moment from 'moment';
+import { Button, Col, Drawer, Form, Input, InputNumber, Row, Select, Space, Typography } from 'antd';
 import { useEffect, useMemo } from 'react';
 
 const currencyFormatter = new Intl.NumberFormat('vi-VN', {
@@ -30,7 +31,7 @@ const OrderFormDrawer = (props: {
 		form.setFieldsValue({
 			code: record?.code,
 			customerId: record?.customerId,
-			orderDate: record?.orderDate ? moment(record.orderDate) : moment(),
+			orderDate: record?.orderDate ?? new Date().toISOString(),
 			status: record?.status ?? OrderStatus.PENDING,
 			note: record?.note,
 			items: buildInitialItems(record) as OrderFormValues['items'],
@@ -88,7 +89,7 @@ const OrderFormDrawer = (props: {
 					onSubmit(
 						{
 							...values,
-							orderDate: moment(values.orderDate).toISOString(),
+							orderDate: values.orderDate,
 							items,
 						},
 						record?.id,
@@ -97,7 +98,7 @@ const OrderFormDrawer = (props: {
 				initialValues={{
 					status: OrderStatus.PENDING,
 					items: [{ productId: undefined, quantity: 1 }],
-					orderDate: moment(),
+					orderDate: new Date().toISOString(),
 				}}
 			>
 				<Row gutter={[16, 0]}>
@@ -121,7 +122,7 @@ const OrderFormDrawer = (props: {
 					</Col>
 					<Col span={24} md={8}>
 						<Form.Item label='Ngày đặt hàng' name='orderDate' rules={[...rules.required]}>
-							<DatePicker style={{ width: '100%' }} format='DD/MM/YYYY HH:mm' showTime />
+							<MyDatePicker showTime format='DD/MM/YYYY HH:mm' />
 						</Form.Item>
 					</Col>
 					<Col span={24} md={8}>
@@ -149,10 +150,7 @@ const OrderFormDrawer = (props: {
 										<Typography.Title level={5} style={{ margin: 0 }}>
 											Sản phẩm trong đơn
 										</Typography.Title>
-										<Button
-											type='dashed'
-											onClick={() => add({ productId: undefined, quantity: 1 })}
-										>
+										<Button type='dashed' onClick={() => add({ productId: undefined, quantity: 1 })}>
 											Thêm sản phẩm
 										</Button>
 									</div>
@@ -211,7 +209,7 @@ const OrderFormDrawer = (props: {
 					</Col>
 					<Col span={24}>
 						<Form.Item label='Ghi chú' name='note'>
-							<Input.TextArea rows={3} placeholder='Nhập ghi chú cho đơn hàng' />
+							<TinyEditor height={220} hideMenubar miniToolbar />
 						</Form.Item>
 					</Col>
 				</Row>
