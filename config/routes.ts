@@ -25,6 +25,12 @@
 		icon: 'HomeOutlined',
 	},
 	{
+		path: '/don-hang',
+		name: 'Đơn hàng',
+		component: './DonHang',
+		icon: 'ShoppingCartOutlined',
+	},
+	{
 		path: '/gioi-thieu',
 		name: 'About',
 		component: './TienIch/GioiThieu',
