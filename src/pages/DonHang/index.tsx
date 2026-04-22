@@ -7,7 +7,7 @@ import OrderHero from './components/OrderHero';
 import OrderList from './components/OrderList';
 import OrderStatusChart from './components/OrderStatusChart';
 import OrderSummaryCards from './components/OrderSummaryCards';
-import { orderStatusLabel, type OrderRecord, OrderStatus } from './types';
+import { orderStatusLabel, OrderStatus } from './types';
 import './index.less';
 
 const statusOptions = [
@@ -37,6 +37,7 @@ const DonHangPage = () => {
 		loadOrders,
 		submitOrder,
 		cancelOrder,
+		deleteOrder,
 	} = useModel('donhang');
 	const [searchText, setSearchText] = useState('');
 	const [statusFilter, setStatusFilter] = useState<string>('');
@@ -126,6 +127,7 @@ const DonHangPage = () => {
 					setVisibleForm(true);
 				}}
 				onCancel={(record) => cancelOrder(record)}
+				onDelete={(record) => deleteOrder(record)}
 			/>
 
 			<OrderFormDrawer

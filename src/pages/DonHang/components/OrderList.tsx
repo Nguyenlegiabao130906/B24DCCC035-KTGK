@@ -1,4 +1,4 @@
-import { Button, Card, Grid, Space, Table, Tag, Typography, type TableColumnsType } from 'antd';
+import { Button, Card, Grid, Popconfirm, Space, Table, Tag, Typography, type TableColumnsType } from 'antd';
 import { useMemo } from 'react';
 import { orderStatusColor, orderStatusLabel, type OrderRecord, OrderStatus } from '../types';
 
@@ -12,8 +12,9 @@ const OrderList = (props: {
 	onView: (record: OrderRecord) => void;
 	onEdit: (record: OrderRecord) => void;
 	onCancel: (record: OrderRecord) => void;
+	onDelete: (record: OrderRecord) => void;
 }) => {
-	const { data, onView, onEdit, onCancel } = props;
+	const { data, onView, onEdit, onCancel, onDelete } = props;
 	const screens = Grid.useBreakpoint();
 	const isMobile = screens.xs && !screens.sm;
 
@@ -64,7 +65,7 @@ const OrderList = (props: {
 			{
 				title: 'Thao tác',
 				key: 'actions',
-				width: 180,
+				width: 240,
 				fixed: 'right',
 				render: (_, record) => (
 					<Space size={4} wrap>
@@ -83,11 +84,21 @@ const OrderList = (props: {
 								Hủy
 							</Button>
 						)}
+						<Popconfirm
+							title='Bạn có chắc chắn muốn xóa đơn hàng này?'
+							okText='Xóa'
+							cancelText='Không'
+							onConfirm={() => onDelete(record)}
+						>
+							<Button danger type='link'>
+								Xóa
+							</Button>
+						</Popconfirm>
 					</Space>
 				),
 			},
 		],
-		[onCancel, onEdit, onView],
+		[onCancel, onDelete, onEdit, onView],
 	);
 
 	return (
@@ -121,6 +132,16 @@ const OrderList = (props: {
 										Hủy
 									</Button>
 								)}
+								<Popconfirm
+									title='Bạn có chắc chắn muốn xóa đơn hàng này?'
+									okText='Xóa'
+									cancelText='Không'
+									onConfirm={() => onDelete(record)}
+								>
+									<Button danger type='link'>
+										Xóa
+									</Button>
+								</Popconfirm>
 							</Space>
 						</Card>
 					))}

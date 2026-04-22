@@ -2,22 +2,9 @@ import { message } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { orderCustomers, orderProducts, seedOrders } from '@/pages/DonHang/data';
 import { OrderStatus, type OrderFormValues, type OrderRecord } from '@/pages/DonHang/types';
-
-const STORAGE_KEY = 'don-hang-data';
+import { getOrdersFromStorage, saveOrdersToStorage } from '@/services/DonHang';
 
 const nowIso = () => new Date().toISOString();
-
-const getStoredOrders = () => {
-	if (typeof window === 'undefined') return seedOrders;
-	try {
-		const raw = localStorage.getItem(STORAGE_KEY);
-		if (!raw) return seedOrders;
-		const parsed = JSON.parse(raw) as OrderRecord[];
-		return Array.isArray(parsed) && parsed.length ? parsed : seedOrders;
-	} catch (error) {
-		return seedOrders;
-	}
-};
 
 const calculateTotal = (items: OrderFormValues['items']) =>
 	(items ?? []).reduce((sum, item) => {
@@ -33,7 +20,7 @@ export default () => {
 	const [selectedOrder, setSelectedOrder] = useState<OrderRecord | undefined>();
 
 	const loadOrders = () => {
-		const nextOrders = getStoredOrders();
+		const nextOrders = getOrdersFromStorage(seedOrders);
 		setOrders(nextOrders);
 		return nextOrders;
 	};
@@ -44,9 +31,7 @@ export default () => {
 
 	const persistOrders = (nextOrders: OrderRecord[]) => {
 		setOrders(nextOrders);
-		if (typeof window !== 'undefined') {
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(nextOrders));
-		}
+		saveOrdersToStorage(nextOrders);
 	};
 
 	const submitOrder = (values: OrderFormValues, editingId?: string) => {
@@ -121,6 +106,13 @@ export default () => {
 		return true;
 	};
 
+	const deleteOrder = (targetOrder: OrderRecord) => {
+		const nextOrders = orders.filter((item) => item.id !== targetOrder.id);
+		persistOrders(nextOrders);
+		message.success('Đã xóa đơn hàng');
+		return true;
+	};
+
 	const summary = useMemo(
 		() => ({
 			total: orders.length,
@@ -149,5 +141,6 @@ export default () => {
 		loadOrders,
 		submitOrder,
 		cancelOrder,
+		deleteOrder,
 	};
 };
